@@ -1,3 +1,5 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+  # Anything that goes under apps or packages , usko mai workspace me index krna chahta hu
