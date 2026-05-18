@@ -1,5 +1,4 @@
 "use client";
-import { trpc } from "~/trpc/client";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
@@ -11,6 +10,7 @@ import {
   FieldSeparator,
 } from "~/components/ui/field";
 import { Input } from "~/components/ui/input";
+import { useSignUp } from "~/hooks/api/auth";
 
 type FormData = {
   fullName: string;
@@ -20,8 +20,8 @@ type FormData = {
 };
 
 export function SignupForm({ className, ...props }: React.ComponentProps<"form">) {
-  const { mutateAsync: createUserWithEmailAndPasswordAsync } =
-    trpc.auth.createUserWithEmailAndPassword.useMutation();
+
+  const { createUserWithEmailAndPasswordAsync } = useSignUp();
 
   const { register, handleSubmit } = useForm<FormData>();
 
