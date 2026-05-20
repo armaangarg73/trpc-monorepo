@@ -5,6 +5,7 @@ import cors from "cors";
 import * as trpcExpress from "@trpc/server/adapters/express";
 import { generateOpenApiDocument, createOpenApiExpressMiddleware } from "trpc-to-openapi";
 import { apiReference } from "@scalar/express-api-reference";
+import cookieParser from "cookie-parser"
 
 import { serverRouter, createContext } from "@repo/trpc/server";
 
@@ -17,13 +18,12 @@ const openApiDocument = generateOpenApiDocument(serverRouter, {
   baseUrl: env.BASE_URL.concat("/api"),
 });
 
-
-  app.use(
-    cors({
-      origin: "http://localhost:3000",
-    }),
-  );
-
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 
@@ -50,6 +50,8 @@ app.use(
     createContext,
   }),
 );
+
+app.use(cookieParser())
 
 app.use(
   "/trpc",
