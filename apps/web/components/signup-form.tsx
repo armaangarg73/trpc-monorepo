@@ -1,5 +1,6 @@
 "use client";
 import { SubmitHandler, useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import {
@@ -20,19 +21,19 @@ type FormData = {
 };
 
 export function SignupForm({ className, ...props }: React.ComponentProps<"form">) {
-
   const { createUserWithEmailAndPasswordAsync } = useSignUp();
-
+  const router = useRouter();
   const { register, handleSubmit } = useForm<FormData>();
 
   const onSubmit: SubmitHandler<FormData> = async (values) => {
     console.log(values);
-    const {id} = await createUserWithEmailAndPasswordAsync({
+    const { id } = await createUserWithEmailAndPasswordAsync({
       email: values.email,
       fullName: values.fullName,
       password: values.password,
     });
-    console.log(`User created with ID=${id}`)
+    console.log(`User created with ID=${id}`);
+    router.replace("/dashboard");
   };
 
   return (

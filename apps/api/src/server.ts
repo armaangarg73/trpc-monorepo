@@ -26,6 +26,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use(cookieParser());
 
 app.get("/", (req, res) => {
   return res.json({ message: "Streamyst is up and running..." });
@@ -51,7 +52,6 @@ app.use(
   }),
 );
 
-app.use(cookieParser())
 
 app.use(
   "/trpc",

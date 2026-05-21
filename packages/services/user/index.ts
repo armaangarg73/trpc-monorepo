@@ -29,6 +29,30 @@ class UserService {
     return createHmac("sha256", salt).update(password).digest("hex");
   }
 
+  private async verifyUserToken(token: string): Promise<GenerateUserTokenPayloadType> {
+    try {
+      const verificationResult = JWT.verify(token, env.JWT_SECRET) as GenerateUserTokenPayloadType;
+      return verificationResult;
+    } catch (error) {
+      throw new Error(`Invalid Token`);
+    }
+  }
+
+  private async getUserInfoById(id: string) {
+    const user = await db
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        fullName: usersTable.fullName,
+        profileImageUrl: usersTable.profileImageUrl,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, id));
+    if (!user || user.length === 0) throw new Error(`User with ID ${id} does not exists`);
+
+    return user[0]!;
+  }
+
   public async createUserWithEmailAndPassword(payload: CreateUserWithEmailAndPasswordInputType) {
     const { fullName, email, password } =
       await createUserWithEmailAndPasswordInput.parseAsync(payload);
@@ -70,12 +94,18 @@ class UserService {
 
     if (hash !== existingUser.password) throw new Error(`Invalid email address or password`);
 
-    const {token} = await this.generateUserToken({id: existingUser.id})
+    const { token } = await this.generateUserToken({ id: existingUser.id });
 
     return {
       id: existingUser.id,
-      token
-    }
+      token,
+    };
+  }
+
+  public async verifyAndDecodeUserToken(token: string) {
+    const { id } = await this.verifyUserToken(token);
+    const userInfo = await this.getUserInfoById(id);
+    return { ...userInfo };
   }
 }
 

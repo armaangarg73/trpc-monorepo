@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm, SubmitHandler } from "react-hook-form";
+import {useRouter} from "next/navigation"
 import { cn } from "~/lib/utils";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
@@ -15,6 +16,7 @@ type LoginFormValues = {
 
 export function LoginForm({ className, ...props }: React.ComponentProps<"div">) {
   const { signInUserWithEmailAndPasswordAsync } = useSignIn();
+  const router = useRouter();
   const { register, handleSubmit } = useForm<LoginFormValues>();
 
   const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
@@ -23,6 +25,7 @@ export function LoginForm({ className, ...props }: React.ComponentProps<"div">) 
       email: data.email,
       password: data.password,
     });
+    router.replace('/dashboard')
   };
 
   return (
