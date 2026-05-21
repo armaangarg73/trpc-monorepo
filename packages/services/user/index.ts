@@ -1,11 +1,13 @@
 import { createHmac, randomBytes } from "node:crypto";
 import * as JWT from "jsonwebtoken";
-import { db, eq, ne } from "@repo/database";
+import { db, eq } from "@repo/database";
 import { usersTable } from "@repo/database/models/user";
 import {
   createUserWithEmailAndPasswordInput,
   generateUserTokenPayLoad,
   GenerateUserTokenPayloadType,
+  signInUserWithEmailAndPasswordInput,
+  SignInUserWithEmailAndPasswordInputType,
   type CreateUserWithEmailAndPasswordInputType,
 } from "./model";
 import { env } from "../env";
@@ -23,6 +25,10 @@ class UserService {
     return { token };
   }
 
+  private async generateHash(salt: string, password: string) {
+    return createHmac("sha256", salt).update(password).digest("hex");
+  }
+
   public async createUserWithEmailAndPassword(payload: CreateUserWithEmailAndPasswordInputType) {
     const { fullName, email, password } =
       await createUserWithEmailAndPasswordInput.parseAsync(payload);
@@ -30,7 +36,7 @@ class UserService {
     const existingUserWithEmail = await this.getUserByEmail(email);
     if (existingUserWithEmail) throw new Error(`user with email ${email} already exists`);
     const salt = randomBytes(16).toString("hex");
-    const hash = createHmac("sha256", salt).update(password).digest("hex");
+    const hash = await this.generateHash(salt, password);
 
     const userInsertResult = await db
       .insert(usersTable)
@@ -43,12 +49,33 @@ class UserService {
       throw new Error(`something went wrong while creating a user`);
 
     const userId = userInsertResult[0].id;
-    const {token} = await this.generateUserToken({ id: userId });
+    const { token } = await this.generateUserToken({ id: userId });
 
     return {
       id: userId,
-      token
+      token,
     };
+  }
+
+  public async signInUserWithEmailAndPassword(payload: SignInUserWithEmailAndPasswordInputType) {
+    const { email, password } = await signInUserWithEmailAndPasswordInput.parseAsync(payload);
+
+    const existingUser = await this.getUserByEmail(email);
+    if (!existingUser) throw new Error(`User with email ${email} does not exists`);
+
+    if (!existingUser.password || !existingUser.salt)
+      throw new Error(`Invalid authentication method`);
+
+    const hash = await this.generateHash(existingUser.salt, password);
+
+    if (hash !== existingUser.password) throw new Error(`Invalid email address or password`);
+
+    const {token} = await this.generateUserToken({id: existingUser.id})
+
+    return {
+      id: existingUser.id,
+      token
+    }
   }
 }
 
